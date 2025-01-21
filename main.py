@@ -30,6 +30,15 @@ async def on_ready():
     print(f'Created by PlayHard')
     print(f'*'*30)
 
+# Define intents
+intents = discord.Intents.default()
+intents.messages = True
+intents.message_content = True
+intents.guilds = True
+
+# Set command prefix and initialize bot with intents
+client = commands.Bot(command_prefix=".", intents=intents)
+
 @tasks.loop(seconds=random.choice(intervals))
 async def spam():
     channel = client.get_channel(int(spam_id))
