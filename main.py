@@ -17,7 +17,15 @@ P2Assistant = 854233015475109888
 poketwo = 716390085896962058
 Pokename = 874910942490677270
 authorized_ids = [Pokename, poketwo, P2Assistant]
-client = commands.Bot(command_prefix=prefix)
+# Define intents
+intents = discord.Intents.default()
+intents.messages = True
+intents.message_content = True
+intents.guilds = True
+
+# Set command prefix and initialize bot with intents
+client = commands.Bot(command_prefix=".", intents=intents)
+
 intervals = [3.6, 2.8, 3.0, 3.2, 3.4]
 
 @client.event
@@ -30,14 +38,6 @@ async def on_ready():
     print(f'Created by PlayHard')
     print(f'*'*30)
 
-# Define intents
-intents = discord.Intents.default()
-intents.messages = True
-intents.message_content = True
-intents.guilds = True
-
-# Set command prefix and initialize bot with intents
-client = commands.Bot(command_prefix=".", intents=intents)
 
 @tasks.loop(seconds=random.choice(intervals))
 async def spam():
