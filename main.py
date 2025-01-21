@@ -26,54 +26,60 @@ intents.guilds = True
 # Set command prefix and initialize bot with intents
 client = commands.Bot(command_prefix=".", intents=intents)
 
+# Message intervals
 intervals = [3.6, 2.8, 3.0, 3.2, 3.4]
 
 @client.event
 async def on_ready():
     print(f'*'*30)
-    print(f'Logged in as {client.user.name} ✅:')
+    print(f'Logged in as {client.user.name} ✅')
     print(f'With ID: {client.user.id}')
     print(f'*'*30)
-    print(f'Poketwo Auto Collection {version}')
+    print(f'Poketwo Auto Collection Bot')
     print(f'Created by PlayHard')
     print(f'*'*30)
 
-
 @tasks.loop(seconds=random.choice(intervals))
 async def spam():
-    channel = client.get_channel(int(spam_id))
-    message_content = ''.join(random.sample(['1','2','3','4','5','6','7','8','9','0'], 7) * 5)
     try:
-        await channel.send(message_content)
-    except discord.errors.HTTPException as e:
-        if e.status == 429:  # Check if it's a rate limit error
-            print(f"Rate limit exceeded. Waiting and retrying...")
-            await asyncio.sleep(5)  # Wait for 5 seconds before retrying
-            await spam()  # Retry sending the message
-        else:
-            print(f"Error sending message: {e}. Retrying in 60 seconds...")
-            await asyncio.sleep(60)  # Wait for 60 seconds before retrying
-            await spam()  # Retry sending the message
-    except discord.errors.DiscordServerError as e:
-        print(f"Error sending message: {e}. Retrying in 60 seconds...")
-        await asyncio.sleep(60)  # Wait for 60 seconds before the first retry
-        print(f"Retrying...")
-        await spam_recursive(channel, message_content, 1)
+        # Ensure SPAM_CHANNEL_ID is defined
+        if not SPAM_CHANNEL_ID:
+            print("Error: SPAM_CHANNEL_ID not defined in environment variables.")
+            return
 
-async def spam_recursive(channel, message_content, attempt):
-    if attempt <= 3:  # Maximum 3 attempts
-        try:
-            await channel.send(message_content)
-        except discord.errors.DiscordServerError as e:
-            print(f"Attempt {attempt} failed. Error: {e}. Retrying in {60 * 2 ** (attempt - 1)} seconds...")
-            await asyncio.sleep(60 * 2 ** (attempt - 1))  # Exponential backoff
-            await spam_recursive(channel, message_content, attempt + 1)
-    else:
-        print("All attempts failed. Giving up.")
-    
+        # Get the channel
+        channel = client.get_channel(int(SPAM_CHANNEL_ID))
+        if not channel:
+            print(f"Error: Unable to find channel with ID {SPAM_CHANNEL_ID}.")
+            return
+
+        # Generate random message
+        message_content = ''.join(random.sample(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], 7) * 5)
+
+        # Send the message
+        await channel.send(message_content)
+
+    except discord.errors.HTTPException as e:
+        if e.status == 429:  # Rate limit error
+            print(f"Rate limit exceeded. Waiting for 10 seconds before retrying...")
+            await asyncio.sleep(10)  # Wait for 10 seconds
+        else:
+            print(f"HTTPException occurred: {e}. Retrying in 60 seconds...")
+            await asyncio.sleep(60)
+
+    except discord.errors.DiscordServerError as e:
+        print(f"Server error occurred: {e}. Retrying in 60 seconds...")
+        await asyncio.sleep(60)
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+# Ensure the bot is ready before starting the task
 @spam.before_loop
 async def before_spam():
     await client.wait_until_ready()
+
+# Start the spam task
 spam.start()
 
 def solve(message, file_name):
